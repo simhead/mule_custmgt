@@ -1,66 +1,202 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking"
+	xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
-http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
-http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
-    <http:listener-config name="customermanagement-httpListenerConfig" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
-    <apikit:config name="customermanagement-config" raml="customermanagement.raml" consoleEnabled="false" doc:name="Router"/>
-    <db:mysql-config name="MySQL_Configuration" host="simdocker.eastus.cloudapp.azure.com" port="3306" user="root" password="manage" database="listtest" doc:name="MySQL Configuration"/>
-    <flow name="customermanagement-main">
-        <http:listener config-ref="customermanagement-httpListenerConfig" path="/api/*" doc:name="HTTP"/>
-        <apikit:router config-ref="customermanagement-config" doc:name="APIkit Router"/>
-        <response>
-            <db:select config-ref="MySQL_Configuration" doc:name="MySQL">
-                <db:parameterized-query><![CDATA[select * from customer]]></db:parameterized-query>
-            </db:select>
-        </response>
-        <exception-strategy ref="customermanagement-apiKitGlobalExceptionMapping" doc:name="Reference Exception Strategy"/>
-    </flow>
-    <flow name="customermanagement-console">
-        <http:listener config-ref="customermanagement-httpListenerConfig" path="/console/*" doc:name="HTTP"/>
-        <apikit:console config-ref="customermanagement-config" doc:name="APIkit Console"/>
-    </flow>
-    <flow name="put:/customer/{custId}:application/json:customermanagement-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="delete:/customer/{custId}:customermanagement-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/customer/{custId}:customermanagement-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="get:/listCustomers:customermanagement-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <flow name="post:/addCustomer:application/json:customermanagement-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
-    </flow>
-    <apikit:mapping-exception-strategy name="customermanagement-apiKitGlobalExceptionMapping">
-        <apikit:mapping statusCode="404">
-            <apikit:exception value="org.mule.module.apikit.exception.NotFoundException" />
-            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
-            <set-payload value="{ &quot;message&quot;: &quot;Resource not found&quot; }" doc:name="Set Payload"/>
-        </apikit:mapping>
-        <apikit:mapping statusCode="405">
-            <apikit:exception value="org.mule.module.apikit.exception.MethodNotAllowedException" />
-            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
-            <set-payload value="{ &quot;message&quot;: &quot;Method not allowed&quot; }" doc:name="Set Payload"/>
-        </apikit:mapping>
-        <apikit:mapping statusCode="415">
-            <apikit:exception value="org.mule.module.apikit.exception.UnsupportedMediaTypeException" />
-            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
-            <set-payload value="{ &quot;message&quot;: &quot;Unsupported media type&quot; }" doc:name="Set Payload"/>
-        </apikit:mapping>
-        <apikit:mapping statusCode="406">
-            <apikit:exception value="org.mule.module.apikit.exception.NotAcceptableException" />
-            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
-            <set-payload value="{ &quot;message&quot;: &quot;Not acceptable&quot; }" doc:name="Set Payload"/>
-        </apikit:mapping>
-        <apikit:mapping statusCode="400">
-            <apikit:exception value="org.mule.module.apikit.exception.BadRequestException" />
-            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
-            <set-payload value="{ &quot;message&quot;: &quot;Bad request&quot; }" doc:name="Set Payload"/>
-        </apikit:mapping>
-    </apikit:mapping-exception-strategy>
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<http:listener-config name="customermanagement-httpListenerConfig"
+		host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration" />
+	<apikit:config name="customermanagement-config" raml="customermanagement.raml"
+		consoleEnabled="false" doc:name="Router" />
+	<db:mysql-config name="simdocker_MySQL_Configuration"
+		host="simdocker.eastus.cloudapp.azure.com" port="3306" user="root"
+		password="manage" database="listtest" doc:name="MySQL Configuration" />
+	<flow name="customermanagement-main">
+		<http:listener config-ref="customermanagement-httpListenerConfig"
+			path="/api/*" doc:name="HTTP" />
+		<apikit:router config-ref="customermanagement-config"
+			doc:name="APIkit Router" />
+		<exception-strategy ref="customermanagement-apiKitGlobalExceptionMapping"
+			doc:name="Reference Exception Strategy" />
+	</flow>
+	<flow name="customermanagement-console">
+		<http:listener config-ref="customermanagement-httpListenerConfig"
+			path="/console/*" doc:name="HTTP" />
+		<apikit:console config-ref="customermanagement-config"
+			doc:name="APIkit Console" />
+	</flow>
+	<flow
+		name="put:/customer/{custId}:application/json:customermanagement-config">
+        <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Object"/>
+        <choice doc:name="Check body message">
+            <when expression="payload!=null">
+                <logger level="INFO" doc:name="Logger"/>
+                <db:update config-ref="simdocker_MySQL_Configuration" doc:name="Update Customer by ID">
+                    <db:parameterized-query><![CDATA[UPDATE CUSTOMERS SET FIRSTNAME = #[payload.firstname], LASTNAME= #[payload.lastname], ADDRESS= #[payload.address] WHERE CUSTOMERID = #[flowVars.custId]]]></db:parameterized-query>
+                </db:update>
+                <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
+            </when>
+            <otherwise>
+                <logger level="INFO" doc:name="Logger"/>
+            </otherwise>
+        </choice>
+
+		<catch-exception-strategy doc:name="Catch Exception Strategy">
+			<logger message="Setting HTTP response to 415" level="INFO"
+				doc:name="Logger" />
+			<set-property propertyName="http.status" value="#[415]"
+				doc:name="415" />
+			<set-payload
+				value="{&quot;message&quot;: &quot;something wrong with Body message&quot;}"
+				mimeType="application/json" doc:name="badformat" />
+		</catch-exception-strategy>
+	</flow>
+	<flow name="delete:/customer/{custId}:customermanagement-config">
+        <db:delete config-ref="simdocker_MySQL_Configuration" doc:name="Delete Customer by ID">
+            <db:parameterized-query><![CDATA[DELETE FROM CUSTOMERS
+WHERE CUSTOMERID=#[flowVars['custId']];]]></db:parameterized-query>
+        </db:delete>
+		<choice doc:name="Choice">
+			<when expression="payload!=null">
+                <logger level="INFO" doc:name="Logger"/>
+				<json:json-to-object-transformer
+					doc:name="JSON to Object" />
+				<set-payload value="#[NullPayload.getInstance()]"
+					doc:name="Set Payload" />
+			</when>
+            <otherwise>
+                <logger level="INFO" doc:name="Logger"/>
+            </otherwise>
+		</choice>
+		<catch-exception-strategy doc:name="Catch Exception Strategy">
+			<logger message="Setting HTTP response to 404" level="INFO"
+				doc:name="Logger" />
+			<set-property propertyName="http.status" value="#[404]"
+				doc:name="404" />
+			<set-payload
+				value="{&quot;message&quot;: &quot;#[flowVars['custId']] Not FOUND!&quot;}"
+				mimeType="application/json" doc:name="notfound" />
+		</catch-exception-strategy>
+	</flow>
+	<flow name="get:/customer/{custId}:customermanagement-config">
+		<db:select config-ref="simdocker_MySQL_Configuration"
+			doc:name="Get Customer by ID">
+			<db:parameterized-query><![CDATA[select FIRSTNAME, LASTNAME, ADDRESS from listtest.CUSTOMERS WHERE CUSTOMERID=#[flowVars['custId']];]]></db:parameterized-query>
+		</db:select>
+		<choice doc:name="Check DB return size">
+			<when expression="payload.size()&gt;0">
+				<logger message="Payload Content size: #[payload.size()]"
+					level="INFO" doc:name="Logger" />
+				<json:object-to-json-transformer
+					doc:name="Object to JSON" />
+				<set-payload value="#[payload]  SIZE returned: #[payload.length()] "
+					doc:name="Set Payload" />
+			</when>
+			<otherwise>
+				<logger message="Payload Content: #[payload]" level="INFO"
+					doc:name="Logger" />
+			</otherwise>
+		</choice>
+		<catch-exception-strategy doc:name="Catch Exception Strategy">
+			<logger message="Setting HTTP response to 404" level="INFO"
+				doc:name="Logger" />
+			<set-property propertyName="http.status" value="#[404]"
+				doc:name="404" />
+			<set-payload
+				value="{&quot;message&quot;: &quot;#[flowVars['custId']] Not FOUND!&quot;}"
+				mimeType="application/json" doc:name="notfound" />
+		</catch-exception-strategy>
+	</flow>
+	<flow name="get:/listCustomers:customermanagement-config">
+		<db:select config-ref="simdocker_MySQL_Configuration"
+			doc:name="List Customers">
+			<db:parameterized-query><![CDATA[select CUSTOMERID, FIRSTNAME, LASTNAME, ADDRESS from listtest.CUSTOMERS;]]></db:parameterized-query>
+		</db:select>
+        <logger level="INFO" doc:name="Logger"/>
+        <json:object-to-json-transformer doc:name="Object to JSON"/>
+        <set-payload value="#[payload]" doc:name="Set Payload"/>
+
+	</flow>
+	<flow name="post:/addCustomer:application/json:customermanagement-config">
+        <json:json-to-object-transformer returnClass="java.util.HashMap " doc:name="JSON to Object"/>
+        <choice doc:name="Choice">
+            <when expression="payload!=null">
+                <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+                <db:insert config-ref="simdocker_MySQL_Configuration" doc:name="Add Customer">
+                    <db:parameterized-query><![CDATA[INSERT INTO CUSTOMERS (FIRSTNAME, LASTNAME, ADDRESS)
+VALUES (#[payload.firstname], #[payload.lastname], #[payload.address]);]]></db:parameterized-query>
+                </db:insert>
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+                <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
+            </when>
+            <otherwise>
+                <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+            </otherwise>
+        </choice>
+
+		<catch-exception-strategy doc:name="Catch Exception Strategy">
+			<logger message="Setting HTTP response to 415" level="INFO"
+				doc:name="Logger" />
+			<set-property propertyName="http.status" value="#[415]"
+				doc:name="415" />
+			<set-payload
+				value="{&quot;message&quot;: &quot;something wrong with body format&quot;}"
+				mimeType="application/json" doc:name="badFormat" />
+		</catch-exception-strategy>
+	</flow>
+	<apikit:mapping-exception-strategy
+		name="customermanagement-apiKitGlobalExceptionMapping">
+		<apikit:mapping statusCode="404">
+			<apikit:exception
+				value="org.mule.module.apikit.exception.NotFoundException" />
+			<set-property propertyName="Content-Type" value="application/json"
+				doc:name="Property" />
+			<set-payload
+				value="{ &quot;message&quot;: &quot;Resource not found&quot; }"
+				doc:name="Set Payload" />
+		</apikit:mapping>
+		<apikit:mapping statusCode="405">
+			<apikit:exception
+				value="org.mule.module.apikit.exception.MethodNotAllowedException" />
+			<set-property propertyName="Content-Type" value="application/json"
+				doc:name="Property" />
+			<set-payload
+				value="{ &quot;message&quot;: &quot;Method not allowed&quot; }"
+				doc:name="Set Payload" />
+		</apikit:mapping>
+		<apikit:mapping statusCode="415">
+			<apikit:exception
+				value="org.mule.module.apikit.exception.UnsupportedMediaTypeException" />
+			<set-property propertyName="Content-Type" value="application/json"
+				doc:name="Property" />
+			<set-payload
+				value="{ &quot;message&quot;: &quot;Unsupported media type&quot; }"
+				doc:name="Set Payload" />
+		</apikit:mapping>
+		<apikit:mapping statusCode="406">
+			<apikit:exception
+				value="org.mule.module.apikit.exception.NotAcceptableException" />
+			<set-property propertyName="Content-Type" value="application/json"
+				doc:name="Property" />
+			<set-payload value="{ &quot;message&quot;: &quot;Not acceptable&quot; }"
+				doc:name="Set Payload" />
+		</apikit:mapping>
+		<apikit:mapping statusCode="400">
+			<apikit:exception
+				value="org.mule.module.apikit.exception.BadRequestException" />
+			<set-property propertyName="Content-Type" value="application/json"
+				doc:name="Property" />
+			<set-payload value="{ &quot;message&quot;: &quot;Bad request&quot; }"
+				doc:name="Set Payload" />
+		</apikit:mapping>
+	</apikit:mapping-exception-strategy>
 </mule>
